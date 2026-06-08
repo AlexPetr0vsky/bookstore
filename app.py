@@ -1,8 +1,8 @@
-from contextlib import contextmanager
-from functools import wraps
-
 import requests
 import os.path
+
+from contextlib import contextmanager
+from functools import wraps
 from bs4 import BeautifulSoup
 from flask import *
 from sqlalchemy import create_engine, exc
@@ -17,6 +17,7 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 from config import Config
 from werkzeug.urls import url_parse
 from models import User
+from custom_exception import WikiParseError
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -106,27 +107,36 @@ def authors_wiki(db, author_id):
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
-    response = requests.get(url, headers=headers)
-    doc = BeautifulSoup(response.text, 'html.parser')
 
-    intro = doc.body.find_all('p')[2].text
+    try:
+        response = requests.get(url, headers=headers)
+        doc = BeautifulSoup(response.text, 'html.parser')
 
-    labels = doc.body.find_all('th', attrs={'class': 'infobox-label'})
-    labels_list = []
-    data_list = []
+        intro = doc.body.find_all('p')[2].text
 
-    for label in labels:
-        labels_list.append(label.text.strip())
-        data_cell = label.find_next_sibling('td')
-        if data_cell:
-            for style_tag in data_cell.find_all('style'):
-                style_tag.decompose()
-            for span in data_cell.find_all('span', class_='mw-parser-output'):
-                span.unwrap()
-            clean_text = data_cell.get_text(' ', strip=True)
-            data_list.append(clean_text)
+        labels = doc.body.find_all('th', attrs={'class': 'infobox-label'})
+        labels_list = []
+        data_list = []
+
+        for label in labels:
+            labels_list.append(label.text.strip())
+            data_cell = label.find_next_sibling('td')
+            if data_cell:
+                for style_tag in data_cell.find_all('style'):
+                    style_tag.decompose()
+                for span in data_cell.find_all('span', class_='mw-parser-output'):
+                    span.unwrap()
+                clean_text = data_cell.get_text(' ', strip=True)
+                data_list.append(clean_text)
+            else:
+                data_list.append('')
+
+    except AttributeError as e:
+        if "'NoneType' object has no attribute 'find_all'" in str(e):
+            raise WikiParseError(
+                f"Parse error for author {author.name}") from e
         else:
-            data_list.append('')
+            raise
 
     return render_template('about.html', author=author, about=intro, data=data_list, labels=labels_list)
 
