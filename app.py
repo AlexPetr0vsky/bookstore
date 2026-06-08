@@ -15,7 +15,7 @@ from flask_login import *
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 from config import Config
-from werkzeug.urls import url_parse
+from urllib.parse import urlparse
 from models import User
 from custom_exception import WikiParseError
 
