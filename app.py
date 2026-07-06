@@ -267,23 +267,23 @@ UPLOAD_FOLDER = 'static/files/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-# Функция для добавление книги
-# @app.route('/uploadfile', methods=['GET', 'POST'])
-# def upload_file():
-#     if request.method == 'POST':
-#         if 'file' not in request.files:
-#             print('no file')
-#             return redirect(request.url)
-#         file = request.files['file']
-#         if file.filename == '':
-#             print('no filename')
-#             return redirect(request.url)
-#         else:
-#             filename = secure_filename(file.filename)
-#             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-#             print("saved file successfully")
-#             return redirect(url_for(get_book) + filename)
-#     return render_template('upload_file.html')
+#Функция для добавление книги
+@app.route('/uploadfile', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            print('no file')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            print('no filename')
+            return redirect(request.url)
+        else:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            print("saved file successfully")
+            return redirect(url_for(get_book) + filename)
+    return render_template('upload_file.html')
 
 
 @app.route('/return-file/<filename>')
