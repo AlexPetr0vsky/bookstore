@@ -67,29 +67,42 @@ def index(db):
     return render_template('index.html', books=query_list)
 
 
-@app.route('/api/books', methods=['POST'])
+@app.route('/api/books', methods=['GET', 'POST'])
 @with_session
-def create_book(db):
-    if not request.json:
-        return jsonify({'error': 'Empty request'})
-    elif not all(key in request.json for key in
-                 ['book']):
-        return jsonify({'error': 'Bad request'})
-    author = Author(
-        name=request.json['name'],
-        photo=request.json['photo'],
-        wiki=request.json['wiki']
-    )
-    author_id = db.query(Author.id).filter(Author.name == request.json['name'])
-    book = Book(
-        book=request.json['book'],
-        description=request.json['description'],
-        icon_book=request.json['icon_book'],
-        author_id=author_id
-    )
-    db.add_all([author, book])
-    db.commit()
-    return jsonify({'success': 'OK'})
+def handle_books(db):
+    if request.method == 'POST':
+        if not request.json:
+            return jsonify({'error': 'Empty request'}), 400
+        if not all(key in request.json for key in ['book']):
+            return jsonify({'error': 'Bad request'}), 400
+
+        author = Author(
+            name=request.json['name'],
+            photo=request.json['photo'],
+            wiki=request.json['wiki']
+        )
+        author_id = db.query(Author.id).filter(Author.name == request.json['name'])
+        book = Book(
+            book=request.json['book'],
+            description=request.json['description'],
+            icon_book=request.json['icon_book'],
+            author_id=author_id
+        )
+        db.add_all([author, book])
+        db.commit()
+        return jsonify({'success': 'OK'}), 200
+
+    books = db.query(Book).all()
+    result = []
+    for book in books:
+        result.append({
+            'id': book.id,
+            'book': book.book,
+            'description': book.description,
+            'icon_book': book.icon_book,
+            'author_id': book.author_id
+        })
+    return jsonify(result), 200
 
 
 @app.route('/authors')
