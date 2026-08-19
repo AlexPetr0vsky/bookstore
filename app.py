@@ -28,8 +28,8 @@ db = SQLAlchemy(app)
 api = Api(app)
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(base_dir, "books.db")
-engine = create_engine(f'sqlite:///{db_path}?check_same_thread=False')
+DB_PATH = os.getenv('DB_PATH', 'books.db')
+engine = create_engine(f'sqlite:///{DB_PATH}?check_same_thread=False')
 Base.metadata.bind = engine
 SessionLocal = sessionmaker(bind=engine)
 
