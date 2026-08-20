@@ -2,6 +2,7 @@ from flask import request, jsonify
 from db_setup import Book, Author
 from app import app, with_session
 from sqlalchemy import exc
+from sqlalchemy.exc import IntegrityError, DataError
 
 
 @app.route('/api/books', methods=['GET', 'POST'])
@@ -183,3 +184,24 @@ def handle_author(db, author_id):
 
     if request.method == 'OPTIONS':
         return '', 200
+
+
+@app.errorhandler(IntegrityError)
+def integrity_error(e):
+    return jsonify({'error': 'Database integrity error'}), 422
+
+@app.errorhandler(DataError)
+def data_error(e):
+    return jsonify({'error': 'Invalid data format'}), 400
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({'error': 'Not found'}), 404
+
+@app.errorhandler(405)
+def method_not_allowed(e):
+    return jsonify({'error': 'Method not allowed'}), 405
+
+@app.errorhandler(415)
+def unsupported_media_type(e):
+    return jsonify({'error': 'Unsupported media type'}), 415

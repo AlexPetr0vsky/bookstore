@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web-test:
+    build: .
+    container_name: bookstore-test
+    ports:
+      - "5001:5000"
+    volumes:
+      - .:/app
+    environment:
+      - DB_PATH=/app/books_test.db
+      - FLASK_ENV=testing
+      - PYTHONUNBUFFERED=1
+    command: python app.py
