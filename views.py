@@ -16,7 +16,7 @@ def index(db):
         books_dic = book.to_dict(only=('id', 'book', 'description', 'icon_book'))
         authors_dic = author.to_dict(only=('name', 'photo'))
         query_list.append(books_dic | authors_dic)
-    return render_template('index.html', books=query_list)
+    return render_template('index.html', books=query_list, title='Bookstore')
 
 
 @app.route('/authors')
