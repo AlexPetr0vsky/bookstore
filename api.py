@@ -186,6 +186,55 @@ def handle_author(db, author_id):
         return '', 200
 
 
+@app.route('/api/register', methods=['POST'])
+@with_session
+def api_register(db):
+    data = request.json
+    if not data or not data.get('username') or not data.get('password'):
+        return jsonify({'error': 'Username and password required'}), 400
+
+    existing = db.query(User).filter_by(name=data['username']).first()
+    if existing:
+        return jsonify({'error': 'User already exists'}), 400
+
+    user = User(name=data['username'], email=data.get('email', ''))
+    user.set_password(data['password'])
+    db.add(user)
+    db.commit()
+
+    return jsonify({'success': 'User created'}), 201
+
+
+@app.route('/api/login', methods=['POST'])
+@with_session
+def api_login(db):
+    data = request.json
+    if not data or not data.get('username') or not data.get('password'):
+        return jsonify({'error': 'Username and password required'}), 400
+
+    user = db.query(User).filter_by(name=data['username']).first()
+    if not user or not user.check_password(data['password']):
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+    # Для простоты используем сессию (как в UI)
+    login_user(user, remember=True)
+
+    return jsonify({
+        'success': 'Logged in',
+        'user': {
+            'id': user.id,
+            'name': user.name,
+            'email': user.email
+        }
+    }), 200
+
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    logout_user()
+    return jsonify({'success': 'Logged out'}), 200
+
+
 @app.errorhandler(IntegrityError)
 def integrity_error(e):
     return jsonify({'error': 'Database integrity error'}), 422

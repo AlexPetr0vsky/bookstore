@@ -83,3 +83,12 @@ def contacts():
 def get_book(db, book_id, filename):
     book = db.query(Book).filter_by(id=book_id).one()
     return render_template('book.html', book=book, value=filename)
+
+
+@app.route('/return-file/<filename>')
+def return_files(filename):
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        return send_file(file_path, as_attachment=True, download_name='')
+    except FileNotFoundError:
+        return 'Book not found! We are sorry!', 404

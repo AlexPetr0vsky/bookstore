@@ -9,7 +9,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - DB_PATH=/app/books_test.db
+      - DB_PATH=/app/books.db
       - FLASK_ENV=development
       - PYTHONUNBUFFERED=1
     command: python app.py
