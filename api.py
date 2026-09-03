@@ -3,6 +3,7 @@ from db_setup import Book, Author
 from app import app, with_session
 from sqlalchemy import exc
 from sqlalchemy.exc import IntegrityError, DataError
+from models import User
 
 
 @app.route('/api/books', methods=['GET', 'POST'])
@@ -202,7 +203,11 @@ def api_register(db):
     db.add(user)
     db.commit()
 
-    return jsonify({'success': 'User created'}), 201
+    return jsonify({
+        'id': user.id,
+        'username': user.name,
+        'email': user.email
+    }), 201
 
 
 @app.route('/api/login', methods=['POST'])
@@ -216,16 +221,12 @@ def api_login(db):
     if not user or not user.check_password(data['password']):
         return jsonify({'error': 'Invalid credentials'}), 401
 
-    # Для простоты используем сессию (как в UI)
     login_user(user, remember=True)
 
     return jsonify({
-        'success': 'Logged in',
-        'user': {
-            'id': user.id,
-            'name': user.name,
-            'email': user.email
-        }
+        'id': user.id,
+        'name': user.name,
+        'email': user.email
     }), 200
 
 
