@@ -1,6 +1,16 @@
 version: '3.8'
 
 services:
+  inventory:
+    build:
+      context: .
+      dockerfile: inventory/Dockerfile
+    container_name: bookstore-inventory
+    ports:
+      - "50051:50051"
+    networks:
+      - test-network
+
   web-test:
     build: .
     container_name: bookstore-test
@@ -12,4 +22,11 @@ services:
       - DB_PATH=/app/books_test.db
       - FLASK_ENV=testing
       - PYTHONUNBUFFERED=1
+      - INVENTORY_HOST=inventory
     command: python app.py
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge

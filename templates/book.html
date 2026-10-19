@@ -5,14 +5,36 @@
   <div class="left-column">
     <img width=200 style="margin-right: 15px; margin-top: 5px" src='/{{book["icon_book"]}}' alt="Book image"/>
   </div>
-  <div class="right-column"><!-- Product Description -->
-  <div class="product-description">
-  <h1>{{book["book"]}}</h1>
-    {{book["description"]}}
-  </div>
-  <div>
-      <a id='download' class="btn btn-primary" href="{{ url_for('return_files', filename=value) }}.pdf" target="blank" >Download introduction PDF</a>
-  </div>
+  <div class="right-column">
+    <div class="product-description">
+      <h1>{{book["book"]}}</h1>
+      {{book["description"]}}
+    </div>
+    <div>
+      <a id='download' class="btn btn-primary" href="{{ url_for('return_files', filename=value) }}.pdf" target="blank">Download introduction PDF</a>
+    </div>
+
+    <!-- Кнопка "Купить" -->
+    <div style="margin-top: 15px;">
+      <button class="btn btn-success" onclick="buyBook({{ book.id }})">Купить</button>
+    </div>
   </div>
 </div>
+
+<!-- Скрипт для отправки заказа -->
+<script>
+async function buyBook(bookId) {
+    const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({book_id: bookId, quantity: 1})
+    });
+    const data = await response.json();
+    if (response.ok) {
+        alert(`Заказ создан! ID: ${data.id}`);
+    } else {
+        alert(`Ошибка: ${data.error}`);
+    }
+}
+</script>
 {% endblock %}

@@ -32,6 +32,7 @@ DB_PATH = os.getenv('DB_PATH', 'books.db')
 engine = create_engine(f'sqlite:///{DB_PATH}?check_same_thread=False')
 Base.metadata.bind = engine
 SessionLocal = sessionmaker(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 
 @contextmanager

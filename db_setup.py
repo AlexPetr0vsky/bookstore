@@ -25,6 +25,15 @@ class Book(Base, SerializerMixin):
     author = relationship("Author", backref="books")
 
 
+class Order(Base):
+    __tablename__ = 'orders'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    book_id = Column(Integer, ForeignKey('books.id'))
+    quantity = Column(Integer, default=1)
+    status = Column(String(20), default='pending')
+
+
 class User(Base, SerializerMixin):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)

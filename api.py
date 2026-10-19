@@ -1,9 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'inventory'))
+
 from flask import request, jsonify
-from db_setup import Book, Author
-from app import app, with_session
-from sqlalchemy import exc
 from sqlalchemy.exc import IntegrityError, DataError
-from models import User
+from db_setup import Book, Author, Order
+from app import app, with_session
+from inventory.client import InventoryClient
+
+inventory_client = InventoryClient()
 
 
 @app.route('/api/books', methods=['GET', 'POST'])
@@ -228,6 +233,40 @@ def api_login(db):
         'name': user.name,
         'email': user.email
     }), 200
+
+
+@app.route('/api/orders', methods=['POST'])
+@with_session
+def create_order(db):
+    data = request.json
+    if not data or not data.get('book_id'):
+        return jsonify({'error': 'book_id required'}), 400
+
+    book = db.query(Book).filter_by(id=data['book_id']).first()
+    if not book:
+        return jsonify({'error': 'Book not found'}), 404
+
+    quantity = data.get('quantity', 1)
+
+    reserved = inventory_client.reserve_stock(book.id, quantity)
+    if not reserved:
+        return jsonify({'error': 'Not enough books in stock'}), 400
+
+    order = Order(
+        user_id=data.get('user_id', 1),
+        book_id=book.id,
+        quantity=quantity,
+        status='pending'
+    )
+    db.add(order)
+    db.commit()
+
+    return jsonify({
+        'id': order.id,
+        'book_id': order.book_id,
+        'quantity': order.quantity,
+        'status': order.status
+    }), 201
 
 
 @app.route('/api/logout', methods=['POST'])
