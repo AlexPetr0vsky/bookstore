@@ -4,7 +4,7 @@ from dataclasses import asdict
 import requests
 from typing import Any, Dict
 from src.models.response_models import BookResponse, ApiResponse, BookListResponse, AuthorListResponse, AuthorResponse, \
-    GeneralErrorResponse, UserResponse
+    GeneralErrorResponse, UserResponse, OrderResponse, InventoryResponse
 
 
 class HTTPClient:
@@ -61,6 +61,49 @@ class HTTPClient:
             data=BookResponse(**response.json())
         )
 
+    def post_inventory(self, data: Dict[str, Any]) -> ApiResponse:
+        response = self._request("POST", "inventory", json=data)
+        if response.status_code != 200:
+            return ApiResponse(
+                status_code=response.status_code,
+                headers=dict(response.headers),
+                data=GeneralErrorResponse(**response.json()) if response.text else None
+            )
+        return ApiResponse(
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            data=response.json()
+        )
+
+    def get_inventory(self, book_id: int) -> ApiResponse:
+        response = self._request("GET", f"inventory/{book_id}")
+        if response.status_code != 200:
+            return ApiResponse(
+                status_code=response.status_code,
+                headers=dict(response.headers),
+                data=GeneralErrorResponse(**response.json()) if response.text else None
+            )
+        return ApiResponse(
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            data=InventoryResponse(**response.json())
+        )
+
+    def post_order(self, data: Dict[str, Any]) -> ApiResponse:
+        response = self._request("POST", "orders", json=data)
+
+        if response.status_code != 201:
+            return ApiResponse(
+                status_code=response.status_code,
+                headers=dict(response.headers),
+                data=GeneralErrorResponse(**response.json()) if response.text else None
+            )
+
+        return ApiResponse(
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            data=OrderResponse(**response.json())
+        )
 
     def patch_book(self, book_id: int, data: Dict[str, Any]) -> ApiResponse:
         response = self._request("PATCH", f"books/{book_id}", json=data)
@@ -184,6 +227,14 @@ class HTTPClient:
 
     def logout(self) -> ApiResponse:
         response = self._request("POST", "logout")
+        return ApiResponse(
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            data=response.json() if response.text else None
+        )
+
+    def clear_inventory(self) -> ApiResponse:
+        response = self._request("DELETE", "inventory")
         return ApiResponse(
             status_code=response.status_code,
             headers=dict(response.headers),

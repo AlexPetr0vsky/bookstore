@@ -2,7 +2,6 @@ from random import randint
 
 import allure
 import pytest_check as check
-from conftest import BookFactory
 
 BOOKS_COUNT = 5
 

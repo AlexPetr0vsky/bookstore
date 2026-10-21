@@ -1,3 +1,4 @@
+import time
 from random import randint
 import allure
 import pytest_check as check
@@ -14,6 +15,8 @@ class TestGetBooks:
     def test_get_books_1(self, api_client, create_books):
         with allure.step("Create Book"):
             created_books = create_books(count=BOOKS_COUNT)
+
+            time.sleep(600)
 
         with allure.step("Sending get books request"):
             response = api_client.get_books()

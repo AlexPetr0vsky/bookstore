@@ -47,3 +47,17 @@ class UserResponse:
     id: int
     username: str
     email: str
+
+
+@dataclass
+class OrderResponse:
+    id: int
+    book_id: int
+    quantity: int
+    status: str
+
+
+@dataclass
+class InventoryResponse:
+    book_id: int
+    quantity: int
