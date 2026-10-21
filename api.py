@@ -8,7 +8,7 @@ from db_setup import Book, Author, Order
 from app import app, with_session
 from inventory.client import InventoryClient
 
-inventory_client = InventoryClient()
+inventory_client = InventoryClient(host="localhost", port=50051)
 
 
 @app.route('/api/books', methods=['GET', 'POST'])
@@ -267,6 +267,43 @@ def create_order(db):
         'quantity': order.quantity,
         'status': order.status
     }), 201
+
+
+@app.route('/api/inventory', methods=['POST'])
+def add_inventory():
+    data = request.json
+    if not data or not data.get('book_id') or not data.get('quantity'):
+        return jsonify({'error': 'book_id and quantity required'}), 400
+
+    try:
+        inventory_client.release_stock(data['book_id'], data['quantity'])
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"INVENTORY ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/inventory/<int:book_id>', methods=['GET'])
+def get_inventory(book_id):
+    try:
+        quantity = inventory_client.get_stock(book_id)
+        return jsonify({'book_id': book_id, 'quantity': quantity}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/inventory', methods=['DELETE'])
+def clear_inventory():
+    try:
+        import sqlite3
+        conn = sqlite3.connect('/app/inventory/inventory.db')
+        conn.execute('DELETE FROM stock')
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"CLEAR INVENTORY ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/logout', methods=['POST'])
