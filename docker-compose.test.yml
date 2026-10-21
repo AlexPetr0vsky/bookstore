@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: inventory/Dockerfile
     container_name: bookstore-inventory
+    volumes:
+      - ./inventory/inventory.db:/app/inventory/inventory.db
     ports:
       - "50051:50051"
     networks:
