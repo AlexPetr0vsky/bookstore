@@ -29,7 +29,6 @@ class InventoryService(inventory_pb2_grpc.InventoryServiceServicer):
 
 
 def serve():
-    db.init_db()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     inventory_pb2_grpc.add_InventoryServiceServicer_to_server(
         InventoryService(), server

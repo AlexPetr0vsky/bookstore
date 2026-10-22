@@ -1,16 +1,38 @@
 services:
+  inventory:
+    build:
+      context: .
+      dockerfile: inventory/Dockerfile
+    container_name: bookstore-inventory
+    ports:
+      - "50051:50051"
+    volumes:
+      - .:/app
+    environment:
+      - DB_PATH=/app/books_test.db
+      - PYTHONUNBUFFERED=1
+    networks:
+      - test-network
+
   web-test:
     build: .
     container_name: bookstore-test
     ports:
       - "5001:5000"
-      - "50051:50051"
     volumes:
       - .:/app
     environment:
       - DB_PATH=/app/books_test.db
       - FLASK_ENV=testing
       - PYTHONUNBUFFERED=1
-      - INVENTORY_HOST=localhost
+      - INVENTORY_HOST=inventory
       - INVENTORY_PORT=50051
-    command: sh -c "cd /app/inventory && python server.py & cd /app && python app.py"
+    command: python app.py
+    networks:
+      - test-network
+    depends_on:
+      - inventory
+
+networks:
+  test-network:
+    driver: bridge

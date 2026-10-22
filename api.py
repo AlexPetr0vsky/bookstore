@@ -1,5 +1,6 @@
 import sys
 import os
+import traceback
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'inventory'))
 
 from flask import request, jsonify
@@ -8,7 +9,19 @@ from db_setup import Book, Author, Order
 from app import app, with_session
 from inventory.client import InventoryClient
 
-inventory_client = InventoryClient(host="localhost", port=50051)
+inventory_client = InventoryClient(
+    host=os.getenv("INVENTORY_HOST", "inventory"),
+    port=int(os.getenv("INVENTORY_PORT", 50051))
+)
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    if hasattr(e, 'code'):
+        return jsonify({'error': e.description}), e.code
+
+    print(traceback.format_exc())
+    return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/books', methods=['GET', 'POST'])
@@ -34,7 +47,8 @@ def handle_books(db):
             book=request.json['book'],
             description=request.json.get('description', ''),
             icon_book=request.json.get('icon_book', ''),
-            author_id=author.id
+            author_id=author.id,
+            stock=request.json.get('stock', 0)
         )
         db.add(book)
         db.commit()
@@ -43,7 +57,8 @@ def handle_books(db):
             'book': book.book,
             'description': book.description,
             'icon_book': book.icon_book,
-            'author_id': author.id
+            'author_id': author.id,
+            'stock': book.stock
         }), 201
 
     books = db.query(Book).all()
@@ -52,7 +67,8 @@ def handle_books(db):
         'book': b.book,
         'description': b.description,
         'icon_book': b.icon_book,
-        'author_id': b.author_id
+        'author_id': b.author_id,
+        'stock': b.stock
     } for b in books]), 200
 
 
@@ -267,43 +283,6 @@ def create_order(db):
         'quantity': order.quantity,
         'status': order.status
     }), 201
-
-
-@app.route('/api/inventory', methods=['POST'])
-def add_inventory():
-    data = request.json
-    if not data or not data.get('book_id') or not data.get('quantity'):
-        return jsonify({'error': 'book_id and quantity required'}), 400
-
-    try:
-        inventory_client.release_stock(data['book_id'], data['quantity'])
-        return jsonify({'success': True}), 200
-    except Exception as e:
-        print(f"INVENTORY ERROR: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/inventory/<int:book_id>', methods=['GET'])
-def get_inventory(book_id):
-    try:
-        quantity = inventory_client.get_stock(book_id)
-        return jsonify({'book_id': book_id, 'quantity': quantity}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/inventory', methods=['DELETE'])
-def clear_inventory():
-    try:
-        import sqlite3
-        conn = sqlite3.connect('/app/inventory/inventory.db')
-        conn.execute('DELETE FROM stock')
-        conn.commit()
-        conn.close()
-        return jsonify({'success': True}), 200
-    except Exception as e:
-        print(f"CLEAR INVENTORY ERROR: {e}")
-        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/logout', methods=['POST'])

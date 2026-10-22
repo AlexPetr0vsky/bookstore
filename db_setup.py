@@ -23,6 +23,7 @@ class Book(Base, SerializerMixin):
     icon_book = Column(String(100), nullable=False)
     author_id = Column(Integer, ForeignKey('authors.id'))
     author = relationship("Author", backref="books")
+    stock = Column(Integer, default=0)
 
 
 class Order(Base):
