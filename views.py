@@ -1,3 +1,4 @@
+import os
 from flask import request, render_template
 from bs4 import BeautifulSoup
 import requests
@@ -87,8 +88,9 @@ def get_book(db, book_id, filename):
 
 @app.route('/return-file/<filename>')
 def return_files(filename):
-    try:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        return send_file(file_path, as_attachment=True, download_name='')
-    except FileNotFoundError:
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    if not os.path.exists(file_path):
         return 'Book not found! We are sorry!', 404
+
+    return send_file(file_path, as_attachment=True, download_name=filename)

@@ -20,6 +20,7 @@ from custom_exception import WikiParseError
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 app.config.from_object(Config)
+app.config['UPLOAD_FOLDER'] = 'static/files/'
 
 login = LoginManager(app)
 login.login_view = 'login'

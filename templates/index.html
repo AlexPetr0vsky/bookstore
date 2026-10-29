@@ -9,7 +9,7 @@
 	<div class="row">
 {% for item in books %}
 		<div class="col-sm-4">
-			<div id="{{item['book']}}" class="product">
+			<div id="{{item['book']}}" class="product" style="display: flex; flex-direction: column; height: 100%; position: relative;">
 				<div class="product-img">
 					<a href="{{ url_for('get_book', book_id=item['id'], filename=item['book']) }}"><img width="120" src='{{item["icon_book"]}}' alt="Book image"></a>
 				</div>
@@ -18,16 +18,35 @@
 				</p>
 				<p class="product-desc">
 					<a href="{{ url_for('get_book', book_id=item['id'], filename=item['book']) }}">{{item["book"]}}</a>
-
 				</p>
-					<p class="product-download">
-						<a href="{{ url_for('get_book', book_id=item['id'], filename=item['book']) }}">
-							Download >>
-						</a>
-					</p>
+
+				<div style="flex-grow: 1;"></div>
+
+				<div style="margin-top: 15px; margin-bottom: 10px; padding: 0 15px;">
+					<a href="{{ url_for('return_files', filename=item['book']) }}.pdf" class="btn btn-secondary w-100 mb-2">
+						Download PDF
+					</a>
+					<button class="btn btn-primary w-100" onclick="buyBook({{ item['id'] }})">Buy Now</button>
+				</div>
 			</div>
 		</div>
 {% endfor %}
 	</div>
 </div>
+
+<script>
+async function buyBook(bookId) {
+    const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({book_id: bookId, quantity: 1})
+    });
+    const data = await response.json();
+    if (response.ok) {
+        alert(`Заказ создан! ID: ${data.id}`);
+    } else {
+        alert(`Ошибка: ${data.error}`);
+    }
+}
+</script>
 {% endblock %}
